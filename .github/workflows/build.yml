@@ -44,7 +44,7 @@ jobs:
       - name: Compile the package
         run: |
           cd openwrt
-          make package/luci-app-modem-manager/compile -j$(nproc)
+          make package/luci-app-modem-manager/compile -j1 V=s
 
       - name: Locate IPK file
         id: ipk
