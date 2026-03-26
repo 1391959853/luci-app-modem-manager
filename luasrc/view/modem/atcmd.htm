@@ -1,0 +1,58 @@
+<%+header%>
+<h2><%:AT Commands%></h2>
+<div class="cbi-map">
+    <fieldset class="cbi-section">
+        <legend>Send AT Command</legend>
+        <div class="cbi-section-descr">Enter AT command (e.g., ATI, AT+CSQ, AT+QCFG="nat"?). Response will appear below.</div>
+        <div class="cbi-section-node">
+            <div class="cbi-value">
+                <label class="cbi-value-title">AT Command:</label>
+                <div class="cbi-value-field">
+                    <input type="text" id="at_cmd" class="cbi-input-text" style="width:80%">
+                </div>
+            </div>
+            <div class="cbi-value">
+                <label class="cbi-value-title">Serial Port:</label>
+                <div class="cbi-value-field">
+                    <select id="port">
+                        <option value="/dev/ttyUSB2">ttyUSB2 (AT)</option>
+                        <option value="/dev/ttyUSB3">ttyUSB3</option>
+                    </select>
+                </div>
+            </div>
+            <div class="cbi-value">
+                <label class="cbi-value-title"></label>
+                <div class="cbi-value-field">
+                    <button onclick="sendCommand()" class="cbi-button cbi-button-apply">Execute</button>
+                </div>
+            </div>
+            <div class="cbi-value">
+                <label class="cbi-value-title">Response:</label>
+                <div class="cbi-value-field">
+                    <textarea id="output" rows="10" style="width:100%" readonly></textarea>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</div>
+<script>
+function sendCommand() {
+    let cmd = document.getElementById('at_cmd').value;
+    let port = document.getElementById('port').value;
+    if (!cmd) return;
+    document.getElementById('output').value = 'Sending...';
+    fetch('/cgi-bin/luci/admin/modem/api/send_at', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'cmd=' + encodeURIComponent(cmd) + '&port=' + encodeURIComponent(port)
+    })
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('output').value = data.result || 'Error';
+    })
+    .catch(e => {
+        document.getElementById('output').value = 'Error: ' + e.message;
+    });
+}
+</script>
+<%+footer%>
