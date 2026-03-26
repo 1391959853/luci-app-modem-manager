@@ -13,14 +13,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 获取完整历史，以便读取 CHANGELOG
+          fetch-depth: 0
 
       - name: Install build dependencies
         run: |
           sudo apt update
           sudo apt install -y build-essential libncurses5-dev gawk git subversion libssl-dev gettext zlib1g-dev unzip python3 python3-distutils file
 
-      - name: Clone OpenWrt
+      - name: Clone OpenWrt (latest stable)
         run: |
           git clone --depth=1 -b v23.05.0 https://github.com/openwrt/openwrt.git
           cd openwrt
@@ -28,7 +28,10 @@ jobs:
           ./scripts/feeds install -a
 
       - name: Copy package to OpenWrt tree
-        run: cp -r ${{ github.workspace }} openwrt/package/luci-app-modem-manager
+        run: |
+          # 只复制插件必需的文件和目录，避免循环复制
+          mkdir -p openwrt/package/luci-app-modem-manager
+          cp -r Makefile root luasrc po openwrt/package/luci-app-modem-manager/
 
       - name: Configure OpenWrt
         run: |
