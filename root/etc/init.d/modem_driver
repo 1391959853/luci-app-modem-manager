@@ -1,0 +1,28 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2024 OpenWrt.org
+
+START=40
+
+boot() {
+	sleep 3
+	detect_and_load
+}
+
+start() {
+	detect_and_load
+}
+
+detect_and_load() {
+	for dev in /sys/bus/usb/devices/*/idVendor; do
+		[ -f "$dev" ] || continue
+		vendor=$(cat "$dev")
+		product=$(cat "${dev%idVendor}idProduct" 2>/dev/null)
+		case "$vendor:$product" in
+			05c6:9215|2c7c:0125|2c7c:0800|2c7c:9003|05c6:9003|0483:*|1bc7:*)
+				modprobe usb-serial-option 2>/dev/null
+				modprobe qmi_wwan 2>/dev/null
+				modprobe cdc_ncm 2>/dev/null
+				;;
+		esac
+	done
+}
