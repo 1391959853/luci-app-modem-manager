@@ -1,0 +1,50 @@
+name: Build IPK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential libncurses5-dev gawk git subversion libssl-dev gettext zlib1g-dev unzip python3 python3-distutils file
+
+      - name: Clone OpenWrt
+        run: |
+          git clone --depth=1 -b v23.05.0 https://github.com/openwrt/openwrt.git
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Copy package
+        run: |
+          cp -r ${{ github.workspace }} openwrt/package/luci-app-modem-manager
+
+      - name: Configure OpenWrt
+        run: |
+          cd openwrt
+          echo "CONFIG_TARGET_x86=y" >> .config
+          echo "CONFIG_TARGET_x86_64=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-modem-manager=y" >> .config
+          make defconfig
+
+      - name: Compile package
+        run: |
+          cd openwrt
+          make package/luci-app-modem-manager/compile -j$(nproc)
+
+      - name: Upload IPK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ipk-packages
+          path: openwrt/bin/packages/*/luci-app-modem-manager_*.ipk
