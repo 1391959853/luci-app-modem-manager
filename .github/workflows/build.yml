@@ -1,20 +1,21 @@
-name: Build IPK
+name: Build and Release IPK
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整历史，以便读取 CHANGELOG
 
-      - name: Install dependencies
+      - name: Install build dependencies
         run: |
           sudo apt update
           sudo apt install -y build-essential libncurses5-dev gawk git subversion libssl-dev gettext zlib1g-dev unzip python3 python3-distutils file
@@ -26,9 +27,8 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Copy package
-        run: |
-          cp -r ${{ github.workspace }} openwrt/package/luci-app-modem-manager
+      - name: Copy package to OpenWrt tree
+        run: cp -r ${{ github.workspace }} openwrt/package/luci-app-modem-manager
 
       - name: Configure OpenWrt
         run: |
@@ -38,13 +38,53 @@ jobs:
           echo "CONFIG_PACKAGE_luci-app-modem-manager=y" >> .config
           make defconfig
 
-      - name: Compile package
+      - name: Compile the package
         run: |
           cd openwrt
           make package/luci-app-modem-manager/compile -j$(nproc)
 
-      - name: Upload IPK
-        uses: actions/upload-artifact@v4
+      - name: Locate IPK file
+        id: ipk
+        run: |
+          IPK_PATH=$(find openwrt/bin/packages -name "luci-app-modem-manager_*.ipk" | head -n 1)
+          echo "ipk_path=$IPK_PATH" >> $GITHUB_OUTPUT
+
+      - name: Prepare release notes
+        id: notes
+        run: |
+          # 优先使用标签注释
+          if [ -n "${{ github.event.head_commit.message }}" ]; then
+            echo "${{ github.event.head_commit.message }}" > release_notes.md
+          else
+            # 尝试从 CHANGELOG.md 提取
+            VERSION=${GITHUB_REF_NAME#v}
+            if [ -f "CHANGELOG.md" ]; then
+              awk -v ver="v${VERSION}" '
+                BEGIN { flag=0; out="" }
+                /^## \[/ {
+                  if (flag) exit
+                  if ($0 ~ "\\[?" ver "\\]?") flag=1
+                  next
+                }
+                flag { out = out $0 "\n" }
+                END { print out }
+              ' CHANGELOG.md > release_notes.md
+            fi
+          fi
+          # 如果文件仍为空，使用默认文本
+          if [ ! -s release_notes.md ]; then
+            echo "## 安装说明\n\n下载 IPK 文件后，使用以下命令安装：\n\`\`\`bash\nopkg install luci-app-modem-manager_*.ipk\n\`\`\`" > release_notes.md
+          fi
+          echo "notes_path=release_notes.md" >> $GITHUB_OUTPUT
+
+      - name: Create Release and Upload IPK
+        uses: softprops/action-gh-release@v1
         with:
-          name: ipk-packages
-          path: openwrt/bin/packages/*/luci-app-modem-manager_*.ipk
+          files: ${{ steps.ipk.outputs.ipk_path }}
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: ${{ steps.notes.outputs.notes_path }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
