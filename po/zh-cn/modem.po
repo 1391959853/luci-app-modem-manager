@@ -1,0 +1,101 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+msgid "4/5G Modem"
+msgstr "4/5G 模块"
+
+msgid "4/5G Modem Status"
+msgstr "4/5G 模块状态"
+
+msgid "Status"
+msgstr "模块状态"
+
+msgid "AT Commands"
+msgstr "AT 命令"
+
+msgid "SMS"
+msgstr "短信"
+
+msgid "SMS Management"
+msgstr "短信管理"
+
+msgid "Send and receive SMS"
+msgstr "发送和接收短信"
+
+msgid "Send SMS"
+msgstr "发送短信"
+
+msgid "Phone Number:"
+msgstr "手机号码:"
+
+msgid "Message:"
+msgstr "消息内容:"
+
+msgid "Send"
+msgstr "发送"
+
+msgid "Inbox"
+msgstr "收件箱"
+
+msgid "Index"
+msgstr "索引"
+
+msgid "Sender"
+msgstr "发件人"
+
+msgid "Time"
+msgstr "时间"
+
+msgid "Text"
+msgstr "内容"
+
+msgid "No messages"
+msgstr "无短信"
+
+msgid "Missing Drivers:"
+msgstr "缺失驱动:"
+
+msgid "Load Now"
+msgstr "立即加载"
+
+msgid "Refresh"
+msgstr "刷新"
+
+msgid "Vendor"
+msgstr "厂商"
+
+msgid "Model"
+msgstr "型号"
+
+msgid "Firmware"
+msgstr "固件版本"
+
+msgid "Signal"
+msgstr "信号"
+
+msgid "Operator"
+msgstr "运营商"
+
+msgid "SIM Status"
+msgstr "SIM 卡状态"
+
+msgid "NAT Mode"
+msgstr "NAT 模式"
+
+msgid "Temperature"
+msgstr "温度"
+
+msgid "AT Command:"
+msgstr "AT 命令:"
+
+msgid "Serial Port:"
+msgstr "串口设备:"
+
+msgid "Execute"
+msgstr "执行"
+
+msgid "Response:"
+msgstr "响应:"
+
+msgid "Loading..."
+msgstr "加载中..."
