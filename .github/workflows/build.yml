@@ -35,7 +35,7 @@ jobs:
 
       - name: Configure OpenWrt
         run: |
-          cd openwrt
+          cd fanchmwrt
           echo "CONFIG_TARGET_x86=y" >> .config
           echo "CONFIG_TARGET_x86_64=y" >> .config
           echo "CONFIG_PACKAGE_luci-app-modem-manager=y" >> .config
@@ -43,7 +43,7 @@ jobs:
 
       - name: Compile the package
         run: |
-          cd openwrt
+          cd fanchmwrt
           make package/luci-app-modem-manager/compile -j1 V=s
 
       - name: Locate IPK file
