@@ -22,7 +22,7 @@ jobs:
 
       - name: Clone OpenWrt (latest stable)
         run: |
-          git clone --depth=1 -b v23.05.0 https://github.com/openwrt/openwrt.git
+          git clone  https://github.com/fanchmwrt/fanchmwrt.git
           cd openwrt
           ./scripts/feeds update -a
           ./scripts/feeds install -a
