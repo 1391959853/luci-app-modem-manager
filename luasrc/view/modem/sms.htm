@@ -1,0 +1,80 @@
+<%+header%>
+<h2><%:SMS Management%></h2>
+<div class="cbi-map">
+    <fieldset class="cbi-section">
+        <legend>Send SMS</legend>
+        <div class="cbi-section-node">
+            <div class="cbi-value">
+                <label class="cbi-value-title">Phone Number:</label>
+                <div class="cbi-value-field"><input type="text" id="sms_number" class="cbi-input-text"></div>
+            </div>
+            <div class="cbi-value">
+                <label class="cbi-value-title">Message:</label>
+                <div class="cbi-value-field"><textarea id="sms_text" rows="3" style="width:100%"></textarea></div>
+            </div>
+            <div class="cbi-value">
+                <label class="cbi-value-title"></label>
+                <div class="cbi-value-field"><button onclick="sendSMS()" class="cbi-button cbi-button-apply">Send</button></div>
+            </div>
+            <div id="sms_result" class="cbi-value" style="display:none;"></div>
+        </div>
+    </fieldset>
+    <fieldset class="cbi-section">
+        <legend>Inbox</legend>
+        <div id="sms_list">Loading...</div>
+    </fieldset>
+</div>
+<script>
+function sendSMS() {
+    let number = document.getElementById('sms_number').value;
+    let text = document.getElementById('sms_text').value;
+    if (!number || !text) return;
+    fetch('/cgi-bin/luci/admin/modem/api/send_sms', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'number=' + encodeURIComponent(number) + '&message=' + encodeURIComponent(text)
+    })
+    .then(r => r.json())
+    .then(data => {
+        let resultDiv = document.getElementById('sms_result');
+        if (data.success) {
+            resultDiv.innerHTML = '<div class="cbi-section-descr" style="color:green;">SMS sent successfully.</div>';
+        } else {
+            resultDiv.innerHTML = '<div class="cbi-section-descr" style="color:red;">Error: ' + (data.error || 'Unknown') + '</div>';
+        }
+        resultDiv.style.display = 'block';
+        setTimeout(() => resultDiv.style.display = 'none', 3000);
+    });
+}
+function loadSMS() {
+    fetch('/cgi-bin/luci/admin/modem/api/read_sms')
+        .then(r => r.json())
+        .then(data => {
+            let html = '<table class="table"><thead><tr><th>Index</th><th>Status</th><th>Sender</th><th>Time</th><th>Text</th></tr></thead><tbody>';
+            if (data.messages && data.messages.length) {
+                data.messages.forEach(msg => {
+                    html += `<tr><td>${msg.index}</td><td>${msg.status}</td><td>${escapeHtml(msg.sender)}</td><td>${msg.time}</td><td>${escapeHtml(msg.text)}</td></tr>`;
+                });
+            } else {
+                html += '<tr><td colspan="5">No messages</td></tr>';
+            }
+            html += '</tbody></table>';
+            document.getElementById('sms_list').innerHTML = html;
+        })
+        .catch(e => {
+            document.getElementById('sms_list').innerHTML = 'Failed to load SMS: ' + e.message;
+        });
+}
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+loadSMS();
+setInterval(loadSMS, 30000);
+</script>
+<%+footer%>
